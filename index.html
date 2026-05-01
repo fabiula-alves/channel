@@ -11,15 +11,8 @@
         iframe { width: 100%; height: 100%; border: none; }
         
         #sidebar { 
-            width: 0; 
-            background: #111; 
-            height: 100vh; 
-            overflow-y: auto; 
-            transition: 0.3s; 
-            border-left: 0px solid #444;
-            display: flex;
-            flex-direction: column;
-            z-index: 200;
+            width: 0; background: #111; height: 100vh; overflow-y: auto; 
+            transition: 0.3s; border-left: 0px solid #444; display: flex; flex-direction: column; z-index: 200;
         }
         #sidebar.aberto { width: 320px; border-left: 2px solid #e60000; }
         
@@ -35,9 +28,24 @@
 
         .overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #000; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 999; 
+            background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; 
         }
+        
+        #grid-filmes {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; padding: 40px; box-sizing: border-box; overflow-y: auto;
+        }
+        .grid-container {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px; max-width: 1000px; margin: 0 auto;
+        }
+        .card-filme {
+            background: #1a1a1a; color: white; padding: 20px 10px; text-align: center;
+            text-decoration: none; border-radius: 8px; border: 1px solid #333;
+            font-weight: bold; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase;
+        }
+        .card-filme:hover { background: #e60000; border-color: white; transform: translateY(-5px); }
+
         .btn-start { 
             padding: 20px; font-size: 1.1rem; cursor: pointer; 
             background: #e60000; color: white; border: none; border-radius: 8px; font-weight: bold;
@@ -50,20 +58,11 @@
         .controles.ativo { opacity: 1; pointer-events: auto; }
         
         .btn-nav { 
-            background: rgba(0,0,0,0.9); 
-            border: 1px solid white; 
-            color: white; 
-            padding: 12px 18px; 
-            cursor: pointer; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0,0,0,0.9); border: 1px solid white; color: white; 
+            padding: 12px 18px; cursor: pointer; border-radius: 5px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center;
         }
         
-        .btn-home { font-size: 1.2rem; }
-
         #click-catcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; }
     </style>
 </head>
@@ -73,10 +72,19 @@
         <h2 style="margin-bottom: 30px;">SELECIONE UMA CATEGORIA</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px; width: 95%;">
             <button class="btn-start" onclick="iniciarFluxo('filmes')">🎬 FILMES</button>
+            <button class="btn-start" style="background: #222; border: 1px solid #e60000;" onclick="abrirGridFilmes()">🎬 + FILMES</button>
             <button class="btn-start" style="background: #0044cc;" onclick="iniciarFluxo('esportes')">⚽ ESPORTES</button>
             <button class="btn-start" style="background: #ff8c00;" onclick="iniciarFluxo('variedades')">✨ VARIEDADES</button>
             <button class="btn-start" style="background: #444;" onclick="iniciarFluxo('outros')">➕ OUTROS</button>
         </div>
+    </div>
+
+    <div id="grid-filmes">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: #e60000;">MAIS FILMES - LINKS EXTERNOS</h2>
+            <button onclick="fecharGridFilmes()" style="background: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">⬅ VOLTAR</button>
+        </div>
+        <div class="grid-container" id="grid-container-mais"></div>
     </div>
 
     <div class="main-content">
@@ -85,7 +93,7 @@
             <iframe id="main-player" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
             
             <div id="ctrls" class="controles">
-                <button class="btn-nav btn-home" onclick="voltarHome(); event.stopPropagation();">🏠</button>
+                <button class="btn-nav" onclick="voltarHome(); event.stopPropagation();">🏠</button>
                 <button class="btn-nav" onclick="mudarCanal(-1); event.stopPropagation();">◀ ANTERIOR</button>
                 <button class="btn-nav" onclick="toggleSidebar(); event.stopPropagation();" style="background: #e60000; border: none;">☰ LISTA</button>
                 <button class="btn-nav" onclick="mudarCanal(1); event.stopPropagation();">PRÓXIMO ▶</button>
@@ -100,16 +108,114 @@
 
 <script>
 const listas = {
-    filmes: ["https://alerquina54541.embedtv.best/megapix","https://www1.embedtv.best/megapix","https://alerquina54541.embedtv.best/space","https://www1.embedtv.best/space","https://alerquina54541.embedtv.best/hbo","https://www1.embedtv.best/hbo","https://alerquina54541.embedtv.best/hbo2","https://www1.embedtv.best/hbo2","https://alerquina54541.embedtv.best/hbofamily","https://www1.embedtv.best/hbofamily","https://alerquina54541.embedtv.best/hbomundi","https://www1.embedtv.best/hbomundi","https://alerquina54541.embedtv.best/hboplus","https://www1.embedtv.best/hboplus","https://alerquina54541.embedtv.best/hbopop","https://www1.embedtv.best/hbopop","https://alerquina54541.embedtv.best/hboxtreme","https://www1.embedtv.best/hboxtreme","https://alerquina54541.embedtv.best/telecineaction","https://www1.embedtv.best/telecineaction","https://alerquina54541.embedtv.best/telecinecult","https://www1.embedtv.best/telecinecult","https://alerquina54541.embedtv.best/telecinefun","https://alerquina54541.embedtv.best/telecinefun","https://alerquina54541.embedtv.best/telecinepipoca","https://alerquina54541.embedtv.best/telecinepipoca","https://alerquina54541.embedtv.best/telecinepremium","https://alerquina54541.embedtv.best/telecinepremium","https://alerquina54541.embedtv.best/telecinetouch","https://alerquina54541.embedtv.best/telecinetouch","https://alerquina54541.embedtv.best/tnt","https://www1.embedtv.best/tnt","https://alerquina54541.embedtv.best/studiouniversal","https://www1.embedtv.best/studiouniversal","https://alerquina54541.embedtv.best/universaltv","https://www1.embedtv.best/universaltv","https://alerquina54541.embedtv.best/cinemax","https://alerquina54541.embedtv.best/cinemax"],
-    esportes: ["https://alerquina54541.embedtv.best/espn","https://www1.embedtv.best/espn","https://alerquina54541.embedtv.best/espn2","https://www1.embedtv.best/espn2","https://alerquina54541.embedtv.best/espn3","https://www1.embedtv.best/espn3","https://alerquina54541.embedtv.best/espn4","https://www1.embedtv.best/espn4","https://alerquina54541.embedtv.best/espn5","https://www1.embedtv.best/espn5","https://alerquina54541.embedtv.best/espn6","https://alerquina54541.embedtv.best/sportv","https://www1.embedtv.best/sportv","https://alerquina54541.embedtv.best/sportv2","https://www1.embedtv.best/sportv2","https://alerquina54541.embedtv.best/sportv3","https://www1.embedtv.best/sportv3","https://alerquina54541.embedtv.best/sportv4","https://www1.embedtv.best/pt_sportv1","https://www1.embedtv.best/pt_sportv2","https://www1.embedtv.best/pt_sportv3","https://www1.embedtv.best/pt_sportv4","https://www1.embedtv.best/pt_sportv5","https://alerquina54541.embedtv.best/bandsports","https://www1.embedtv.best/bandsports"],
-    variedades: ["https://alerquina54541.embedtv.best/viva","https://www1.embedtv.best/viva","https://alerquina54541.embedtv.best/discoveryhh","https://www1.embedtv.best/discoveryhh","https://alerquina54541.embedtv.best/discoverychannel","https://www1.embedtv.best/discoverychannel","https://www1.embedtv.best/foodnetwork","https://www1.embedtv.best/warnerchannel","https://alerquina54541.embedtv.best/tntseries","https://www1.embedtv.best/tntseries","https://alerquina54541.embedtv.best/tntnovelas","https://alerquina54541.embedtv.best/axn","https://www1.embedtv.best/axn","https://alerquina54541.embedtv.best/ae","https://www1.embedtv.best/ae","https://www1.embedtv.best/sonychannel","https://alerquina54541.embedtv.best/tlc","https://www1.embedtv.best/tlc","https://www1.embedtv.best/tcm","https://www1.embedtv.best/gnt","https://alerquina54541.embedtv.best/hgtv","https://www1.embedtv.best/hgtv","https://alerquina54541.embedtv.best/off"],
-    outros: ["https://rdcanais.top/embed/?id=megapix","https://rdcanais.top/embed/?id=space","https://rdcanais.top/embed/?id=hbo","https://rdcanais.top/embed/?id=hbo2","https://rdcanais.top/embed/?id=hbofamily","https://rdcanais.top/embed/?id=hbomundi","https://rdcanais.top/embed/?id=hboplus","https://rdcanais.top/embed/?id=hbopop","https://rdcanais.top/embed/?id=hboxtreme","https://rdcanais.top/embed/?id=telecineaction","https://rdcanais.top/embed/?id=telecinecult","https://rdcanais.top/embed/?id=telecinefun","https://rdcanais.top/embed/?id=telecinepipoca","https://rdcanais.top/embed/?id=telecinepremium","https://rdcanais.top/embed/?id=telecinetouch","https://rdcanais.top/embed/?id=tnt","https://rdcanais.top/embed/?id=universaltv","https://rdcanais.top/embed/?id=cinemax","https://rdcanais.top/embed/?id=viva","https://rdcanais.top/embed/?id=discoveryheh","https://rdcanais.top/embed/?id=discoverychannel","https://rdcanais.top/embed/?id=tntseries","https://rdcanais.top/embed/?id=axn","https://rdcanais.top/embed/?id=aee","https://rdcanais.top/embed/?id=tlc","https://rdcanais.top/embed/?id=hgtv","https://rdcanais.top/embed/?id=espn","https://meuplayeronlinehd.com/myplay/watch.html?id=espn","https://rdcanais.top/embed/?id=espn2","https://meuplayeronlinehd.com/myplay/watch.html?id=espn2","https://rdcanais.top/embed/?id=espn3","https://meuplayeronlinehd.com/myplay/watch.html?id=espn3","https://rdcanais.top/embed/?id=espn4","https://meuplayeronlinehd.com/myplay/watch.html?id=espn4","https://rdcanais.top/embed/?id=espn5","https://meuplayeronlinehd.com/myplay/watch.html?id=espn5","https://rdcanais.top/embed/?id=sportv","https://meuplayeronlinehd.com/myplay/watch.html?id=sportv","https://rdcanais.top/embed/?id=sportv2","https://meuplayeronlinehd.com/myplay/watch.html?id=sportv2","https://rdcanais.top/embed/?id=sportv3","https://meuplayeronlinehd.com/myplay/watch.html?id=sportv3","https://rdcanais.top/embed/?id=bandsports"]
+    filmes: [
+        "https://alerquina54541.embedtv.best/megapix","https://www1.embedtv.best/megapix","https://alerquina54100.embedtv.live/megapix",
+        "https://alerquina54541.embedtv.best/space","https://www1.embedtv.best/space","https://alerquina54100.embedtv.live/space",
+        "https://alerquina54541.embedtv.best/hbo","https://www1.embedtv.best/hbo","https://alerquina54100.embedtv.live/hbo",
+        "https://alerquina54541.embedtv.best/hbo2","https://www1.embedtv.best/hbo2","https://alerquina54100.embedtv.live/hbo2",
+        "https://alerquina54541.embedtv.best/hbofamily","https://www1.embedtv.best/hbofamily","https://alerquina54100.embedtv.live/hbofamily",
+        "https://alerquina54541.embedtv.best/hbomundi","https://www1.embedtv.best/hbomundi","https://alerquina54100.embedtv.live/hbomundi",
+        "https://alerquina54541.embedtv.best/hboplus","https://www1.embedtv.best/hboplus","https://alerquina54100.embedtv.live/hboplus",
+        "https://alerquina54541.embedtv.best/hbopop","https://www1.embedtv.best/hbopop","https://alerquina54100.embedtv.live/hbopop",
+        "https://alerquina54541.embedtv.best/hboxtreme","https://www1.embedtv.best/hboxtreme","https://alerquina54100.embedtv.live/hboxtreme",
+        "https://alerquina54541.embedtv.best/telecineaction","https://www1.embedtv.best/telecineaction","https://alerquina54100.embedtv.live/telecineaction",
+        "https://alerquina54541.embedtv.best/telecinecult","https://www1.embedtv.best/telecinecult","https://alerquina54100.embedtv.live/telecinecult",
+        "https://alerquina54541.embedtv.best/telecinefun","https://www1.embedtv.best/telecinefun","https://alerquina54100.embedtv.live/telecinefun",
+        "https://alerquina54541.embedtv.best/telecinepipoca","https://www1.embedtv.best/telecinepipoca","https://alerquina54100.embedtv.live/telecinepipoca",
+        "https://alerquina54541.embedtv.best/telecinepremium","https://www1.embedtv.best/telecinepremium","https://alerquina54100.embedtv.live/telecinepremium",
+        "https://alerquina54541.embedtv.best/telecinetouch","https://www1.embedtv.best/telecinetouch","https://alerquina54100.embedtv.live/telecinetouch",
+        "https://alerquina54541.embedtv.best/tnt","https://www1.embedtv.best/tnt","https://alerquina54100.embedtv.live/tnt",
+        "https://alerquina54541.embedtv.best/studiouniversal","https://www1.embedtv.best/studiouniversal","https://alerquina54100.embedtv.live/studiouniversal",
+        "https://alerquina54541.embedtv.best/universaltv","https://www1.embedtv.best/universaltv","https://alerquina54100.embedtv.live/universaltv",
+        "https://alerquina54541.embedtv.best/cinemax","https://www1.embedtv.best/cinemax","https://alerquina54100.embedtv.live/cinemax"
+    ],
+    mais_filmes: [
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=megapix",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=sony",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=space",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hbo2",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hbo",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hbofamily",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hbomundi",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hboplus",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hbopop",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=hboxtreme",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecineaction",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecinecult",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecinefun",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecinepipoca",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecinepremium",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=telecinetouch",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=tnt",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=studiouniversal",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=universal",
+        "https://outbound-proxy-us-east1-0-blob-usercontent-client-id-7775691497.googleapis.com.de/player3/ch.php?categoria=live&canal=cinemax"
+    ],
+    variedades: [
+        "https://alerquina54541.embedtv.best/viva","https://www1.embedtv.best/viva","https://alerquina54541.embedtv.best/discoveryhh",
+        "https://www1.embedtv.best/discoveryhh","https://alerquina54541.embedtv.best/discoverychannel","https://www1.embedtv.best/discoverychannel",
+        "https://www1.embedtv.best/foodnetwork","https://www1.embedtv.best/warnerchannel","https://alerquina54541.embedtv.best/tntseries",
+        "https://www1.embedtv.best/tntseries","https://www1.embedtv.best/tntnovelas","https://alerquina54541.embedtv.best/axn",
+        "https://www1.embedtv.best/axn","https://alerquina54541.embedtv.best/ae","https://www1.embedtv.best/ae",
+        "https://www1.embedtv.best/sonychannel","https://alerquina54541.embedtv.best/tlc","https://www1.embedtv.best/tlc",
+        "https://www1.embedtv.best/tcm","https://www1.embedtv.best/gnt","https://alerquina54541.embedtv.best/hgtv",
+        "https://alerquina54541.embedtv.best/hgtv","https://www1.embedtv.best/off"
+    ],
+    esportes: [
+        "https://alerquina54541.embedtv.best/espn","https://www1.embedtv.best/espn","https://alerquina54541.embedtv.best/espn2",
+        "https://www1.embedtv.best/espn2","https://alerquina54541.embedtv.best/espn3","https://www1.embedtv.best/espn3",
+        "https://alerquina54541.embedtv.best/espn4","https://www1.embedtv.best/espn4","https://alerquina54541.embedtv.best/espn5",
+        "https://www1.embedtv.best/espn5","https://alerquina54541.embedtv.best/espn6","https://alerquina54541.embedtv.best/sportv",
+        "https://www1.embedtv.best/sportv","https://alerquina54541.embedtv.best/sportv2","https://www1.embedtv.best/sportv2",
+        "https://alerquina54541.embedtv.best/sportv3","https://www1.embedtv.best/sportv3","https://alerquina54541.embedtv.best/sportv4",
+        "https://www1.embedtv.best/pt_sportv1","https://www1.embedtv.best/pt_sportv2","https://www1.embedtv.best/pt_sportv3",
+        "https://www1.embedtv.best/pt_sportv4","https://www1.embedtv.best/pt_sportv5","https://alerquina54541.embedtv.best/bandsports","https://www1.embedtv.best/bandsports"
+    ],
+    outros: [
+        "https://rdcanais.top/embed/?id=megapix","https://rdcanais.top/embed/?id=space","https://rdcanais.top/embed/?id=hbo",
+        "https://rdcanais.top/embed/?id=hbo2","https://rdcanais.top/embed/?id=hbofamily","https://rdcanais.top/embed/?id=hbomundi",
+        "https://rdcanais.top/embed/?id=hboplus","https://rdcanais.top/embed/?id=hbopop","https://rdcanais.top/embed/?id=hbo",
+        "https://rdcanais.top/embed/?id=hboxtreme","https://rdcanais.top/embed/?id=telecineaction","https://rdcanais.top/embed/?id=telecinecult",
+        "https://rdcanais.top/embed/?id=telecinefun","https://rdcanais.top/embed/?id=telecinepipoca","https://rdcanais.top/embed/?id=telecinepremium",
+        "https://rdcanais.top/embed/?id=telecinetouch","https://rdcanais.top/embed/?id=tnt","https://rdcanais.top/embed/?id=universaltv",
+        "https://rdcanais.top/embed/?id=cinemax","https://rdcanais.top/embed/?id=viva","https://rdcanais.top/embed/?id=discoveryheh",
+        "https://rdcanais.top/embed/?id=discoverychannel","https://rdcanais.top/embed/?id=tntseries","https://rdcanais.top/embed/?id=axn",
+        "https://rdcanais.top/embed/?id=aee","https://rdcanais.top/embed/?id=tlc","https://rdcanais.top/embed/?id=hgtv",
+        "https://rdcanais.top/embed/?id=espn","https://meuplayeronlinehd.com/myplay/watch.html?id=espn","https://rdcanais.top/embed/?id=espn2",
+        "https://meuplayeronlinehd.com/myplay/watch.html?id=espn2","https://rdcanais.top/embed/?id=espn3","https://meuplayeronlinehd.com/myplay/watch.html?id=espn3",
+        "https://rdcanais.top/embed/?id=espn4","https://meuplayeronlinehd.com/myplay/watch.html?id=espn4","https://rdcanais.top/embed/?id=espn5",
+        "https://meuplayeronlinehd.com/myplay/watch.html?id=espn5","https://rdcanais.top/embed/?id=sportv","https://meuplayeronlinehd.com/myplay/watch.html?id=sportv",
+        "https://rdcanais.top/embed/?id=sportv2","https://meuplayeronlinehd.com/myplay/watch.html?id=sportv2","https://rdcanais.top/embed/?id=sportv3",
+        "https://meuplayeronlinehd.com/myplay/watch.html?id=sportv3","https://rdcanais.top/embed/?id=bandsports",
+        // Novos Links Japoneses/Longos
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=sony",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=amc",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=paramount",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hbo",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hbo2",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hbofamily",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共の識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hbomundi",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hboplus",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hbopop",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=hboxtreme",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラア.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecineaction",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecinecult",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecinefun",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecinepipoca",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecinepremium",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=telecinetouch",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=tnt",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=megapix",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=universal",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=espn",
+        "https://デ-ン-ッ-ク-ス-ン-デ-ド-ド-ル-ボ-ラ-ルグレフト-ブムフクトプドラぁ.ジ-1l1-グ.ッ-22-ク-11-ス-33-ル-99-プ-75-ゾ--エ--ブ--ス-ッ.ク.ス.ズ.ク.ジ.シグナルパブリコ-公共 de識標-バレウドットグウクトットズヒ.セール/player3/ch.php?canal=sportv1"
+    ]
 };
 
 let listaAtual = [];
 let indexAtual = 0;
 let timerControles;
-let timerSidebar; // Novo temporizador para a lateral
+let timerSidebar;
 
 function iniciarFluxo(categoria) {
     document.getElementById('start-screen').style.display = 'none';
@@ -118,6 +224,26 @@ function iniciarFluxo(categoria) {
     indexAtual = 0;
     montarListaLateral();
     carregarCanais();
+}
+
+function abrirGridFilmes() {
+    const container = document.getElementById('grid-container-mais');
+    container.innerHTML = "";
+    listas.mais_filmes.forEach(url => {
+        let canal = "CANAL";
+        if(url.includes('canal=')) canal = url.split('canal=')[1];
+        const a = document.createElement('a');
+        a.className = 'card-filme';
+        a.href = url;
+        a.target = "_blank";
+        a.innerText = canal.replace('_', ' ');
+        container.appendChild(a);
+    });
+    document.getElementById('grid-filmes').style.display = 'block';
+}
+
+function fecharGridFilmes() {
+    document.getElementById('grid-filmes').style.display = 'none';
 }
 
 function carregarCanais() {
@@ -138,17 +264,24 @@ function montarListaLateral() {
     const container = document.getElementById('lista-canais-container');
     container.innerHTML = "";
     listaAtual.forEach((url, i) => {
-        let nomeRaw = url.split('/').pop().replace('?id=', '').replace('.php', '');
-        if(nomeRaw.includes('canal=')) nomeRaw = nomeRaw.split('=')[1];
+        let nomeRaw = "Canal";
+        if(url.includes('canal=')) {
+            nomeRaw = url.split('canal=')[1];
+        } else if(url.includes('id=')) {
+            nomeRaw = url.split('id=')[1];
+        } else {
+            nomeRaw = url.split('/').pop();
+        }
+        
         const div = document.createElement('div');
         div.className = 'canal-item';
         div.id = 'item-' + i;
-        div.innerText = `${i + 1}. ${nomeRaw.toUpperCase()}`;
+        div.innerText = `${i + 1}. ${nomeRaw.toUpperCase().replace('.PHP', '')}`;
         div.onclick = (e) => {
             e.stopPropagation();
             indexAtual = i;
             carregarCanais();
-            resetarTimerSidebar(); // Reseta ao clicar em um canal
+            resetarTimerSidebar();
         };
         container.appendChild(div);
     });
@@ -163,32 +296,23 @@ function marcarAtivoNaLista() {
     }
 }
 
-// Lógica de fechamento automático da Sidebar
 function toggleSidebar() {
     const sb = document.getElementById('sidebar');
     sb.classList.toggle('aberto');
-    
-    if(sb.classList.contains('aberto')) {
-        resetarTimerSidebar();
-    } else {
-        clearTimeout(timerSidebar);
-    }
+    if(sb.classList.contains('aberto')) resetarTimerSidebar();
 }
 
 function resetarTimerSidebar() {
     clearTimeout(timerSidebar);
     const sb = document.getElementById('sidebar');
-    
     if(sb.classList.contains('aberto')) {
-        timerSidebar = setTimeout(() => {
-            sb.classList.remove('aberto');
-        }, 30000); // 30 segundos
+        timerSidebar = setTimeout(() => sb.classList.remove('aberto'), 30000);
     }
 }
 
 function voltarHome() {
     document.getElementById('sidebar').classList.remove('aberto');
-    clearTimeout(timerSidebar);
+    fecharGridFilmes();
     document.getElementById('main-player').src = "";
     document.getElementById('start-screen').style.display = 'flex';
 }
