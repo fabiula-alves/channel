@@ -69,20 +69,15 @@
 <body>
 
     <div id="start-screen" class="overlay">
-    <h2 style="margin-bottom: 30px;">SELECIONE UMA CATEGORIA</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px; width: 95%;">
-        <button class="btn-start" onclick="iniciarFluxo('filmes')">🎬 FILMES</button>
-        <button class="btn-start" style="background: #0044cc;" onclick="iniciarFluxo('esportes')">⚽ ESPORTES</button>
-        <button class="btn-start" style="background: #ff8c00;" onclick="iniciarFluxo('variedades')">✨ VARIEDADES</button>
-        <button class="btn-start" style="background: #444;" onclick="iniciarFluxo('outros')">➕ OUTROS</button>
-        <button class="btn-start" style="background: #222; border: 1px solid #e60000;" onclick="abrirGridFilmes()">🎬 + FILMES</button>
-        
-        <!-- NOVO BOTÃO BIBLIOTECA -->
-        <a href="biblioteca.html" style="text-decoration: none;">
-            <button class="btn-start" style="background: #6a1b9a; width: 100%;">📚 BIBLIOTECA</button>
-        </a>
+        <h2 style="margin-bottom: 30px;">SELECIONE UMA CATEGORIA</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px; width: 95%;">
+            <button class="btn-start" onclick="iniciarFluxo('filmes')">🎬 FILMES</button>
+            <button class="btn-start" style="background: #0044cc;" onclick="iniciarFluxo('esportes')">⚽ ESPORTES</button>
+            <button class="btn-start" style="background: #ff8c00;" onclick="iniciarFluxo('variedades')">✨ VARIEDADES</button>
+            <button class="btn-start" style="background: #444;" onclick="iniciarFluxo('outros')">➕ OUTROS</button>
+ 	    <button class="btn-start" style="background: #222; border: 1px solid #e60000;" onclick="abrirGridFilmes()">🎬 + FILMES</button>
+        </div>
     </div>
-</div>
 
     <div id="grid-filmes">
         <div style="text-align: center; margin-bottom: 30px;">

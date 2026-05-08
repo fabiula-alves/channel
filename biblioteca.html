@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Filmes Pro</title>
+    <style>
+        body { background: #000; color: white; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
+        #catalog-screen { padding: 40px 20px; background: linear-gradient(to bottom, #1a0000 0%, #000 400px); min-height: 100vh; }
+        
+        .header-logo { text-align: center; margin-bottom: 30px; }
+        .header-logo h1 { font-size: 3rem; margin: 0; letter-spacing: 2px; }
+        .header-logo span { color: #e60000; }
+
+        .filter-container {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        .filter-container input, .filter-container select {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 6px;
+            outline: none;
+            min-width: 160px;
+            font-size: 0.9rem;
+        }
+        .filter-container input:focus { border-color: #e60000; }
+
+        /* Estilo para os Títulos de Seção */
+        .secao-titulo { 
+            grid-column: 1 / -1; 
+            color: #e60000; 
+            font-size: 1.8rem; 
+            margin: 30px 0 15px 0; 
+            border-bottom: 2px solid #e60000; 
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .grid-filmes { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 25px; max-width: 1400px; margin: 0 auto; }
+        .card-filme { background: #111; border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 2px solid #222; position: relative; }
+        .card-filme:hover { transform: scale(1.06); border-color: #e60000; z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .card-filme img { width: 100%; height: 260px; object-fit: cover; display: block; background: #222; }
+        .card-filme .info { padding: 12px; text-align: center; }
+        .card-filme h3 { font-size: 0.85rem; margin: 0 0 5px 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-filme p { font-size: 0.75rem; color: #888; margin: 0; }
+
+        #player-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; }
+        .video-container { width: 100%; height: 100%; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        #top-navigation { position: absolute; top: 0; left: 0; width: 100%; height: 100px; z-index: 2100; display: flex; align-items: center; padding: 0 30px; pointer-events: none; }
+        .btn-voltar { background: rgba(230,0,0,0.9); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; pointer-events: auto; opacity: 0; transition: 0.4s; }
+        #player-screen:hover .btn-voltar { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div id="catalog-screen">
+    <div class="header-logo"><h1>Lista de <span>Filmes</span></h1></div>
+
+    <div class="filter-container">
+        <input type="text" id="search-input" placeholder="Buscar por nome..." oninput="filtrar()">
+        
+        <select id="select-genero" onchange="filtrar()">
+            <option value="">Todos os Gêneros</option>
+            <option value="Ação">Ação</option>
+            <option value="Animação">Animação</option>
+            <option value="Comédia">Comédia</option>
+            <option value="Drama">Drama</option>
+            <option value="Terror">Terror</option>
+            <option value="Suspense">Suspense</option>
+            <option value="Ficção">Ficção Científica</option>
+        </select>
+
+        <select id="select-colecao" onchange="filtrar()">
+            <option value="">Todas as Coleções</option>
+            <option value="Missão Impossível">Missão Impossível</option>
+            <option value="Lego">Lego</option>
+            <option value="A Múmia">A Múmia</option>
+            <option value="Scooby-Doo">Scooby-Doo</option>
+        </select>
+
+        <select id="select-ano" onchange="filtrar()">
+            <option value="">Todos os Anos</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2010-2019">2010 a 2019</option>
+            <option value="2000-2009">2000 a 2009</option>
+            <option value="1990-1999">Anos 90</option>
+            <option value="1980-1989">Anos 80</option>
+            <option value="Antigos">Mais antigos</option>
+        </select>
+    </div>
+
+    <div class="grid-filmes" id="lista-filmes"></div>
+</div>
+
+<div id="player-screen">
+    <div id="top-navigation"><button class="btn-voltar" onclick="fecharPlayer()">⬅ VOLTAR AO CATÁLOGO</button></div>
+    <div class="video-container"><iframe id="main-player" src="" allowfullscreen></iframe></div>
+</div>
+
+<script>
+const filmes = [
+    {t:"Prisioneiro do Caos", u:"https://www.dailymotion.com/embed/video/x96vvha", capa:"img/prisioneirodocaos.jpg", g:"Ação", a:2024, c:""},
+    {t:"O Poder e a Lei", u:"https://www.dailymotion.com/embed/video/x96vvha", capa:"img/opoderealei.jpg", g:"Drama", a:2011, c:""},
+    {t:"60 Minutos", u:"https://www.dailymotion.com/embed/video/x970aby", capa:"img/60minutos24.jpg", g:"Ação", a:2024, c:""},
+    {t:"O Auto da Compadecida 2", u:"https://www.dailymotion.com/embed/video/x9ds02k", capa:"img/oautodacompadecida2.jpg", g:"Comédia", a:2024, c:""},
+    {t:"A Espiã que Sabia de Menos", u:"https://www.dailymotion.com/embed/video/x8rfyye", capa:"img/aespiaquesabiademenos.jpg", g:"Comédia", a:2015, c:""},
+    {t:"Rota de Fuga", u:"https://www.dailymotion.com/embed/video/x9fuu4a", capa:"img/rotadefuga.jpg", g:"Ação", a:2013, c:""},
+    {t:"O Túnel", u:"https://www.dailymotion.com/embed/video/x97ww1k", capa:"img/otunel19.jpg", g:"Suspense", a:2019, c:""},
+    {t:"Um Dia Difícil", u:"https://www.dailymotion.com/embed/video/x9bx718", capa:"img/umdiadificil22.jpg", g:"Ação", a:2022, c:""},
+    {t:"Muzzle", u:"https://www.dailymotion.com/embed/video/x9k5h2g", capa:"img/muzzle23.jpg", g:"Ação", a:2023, c:""},
+    {t:"Ninja 2 | A Vingança", u:"https://www.dailymotion.com/embed/video/x9mmn7u", capa:"img/ninja2avingança.jpg", g:"Ação", a:2013, c:""},
+    {t:"Rambo | Até o Fim", u:"https://www.dailymotion.com/embed/video/x92jp02", capa:"img/ramboateofim.jpg", g:"Ação", a:2019, c:""},
+    {t:"Chico Bento e a Goiabeira Maraviosa", u:"https://www.dailymotion.com/embed/video/x9hdhcs", capa:"img/chicobento25.jpg", g:"Comédia", a:2025, c:""},
+    {t:"Ela é o Diabo", u:"https://www.dailymotion.com/embed/video/x9samyg", capa:"img/elaeodiabo.jpg", g:"Comédia", a:1989, c:""},
+    {t:"Elvira, Rainha das Trevas", u:"https://www.dailymotion.com/embed/video/x8hitlb", capa:"img/elvirarainhadastrevas.jpg", g:"Comédia", a:1988, c:""},
+    {t:"Vencer ou Morrer", u:"https://ok.ru/videoembed/298039052960", capa:"img/venceroumorrer.jpg", g:"Ação", a:1993, c:""},
+    {t:"Vivo ou Morto", u:"https://ok.ru/videoembed/6484704561834", capa:"img/vivooumorto.jpg", g:"Ação", a:2006, c:""},
+    {t:"Encontro Fatal", u:"https://ok.ru/videoembed/6608681437866", capa:"img/encontrofatal.jpg", g:"Ação", a:1982, c:""},
+    {t:"O Pavilhão da Morte", u:"https://ok.ru/videoembed/6995616467626", capa:"img/pavilhaodamorte.jpg", g:"Ação", a:2021, c:""},
+    {t:"Legião", u:"https://ok.ru/videoembed/5553697917496", capa:"img/legiao.jpg", g:"Ação", a:2010, c:""},
+    {t:"Morrer Mil Vezes", u:"https://ok.ru/videoembed/6939690338986", capa:"img/morrermilvezes.jpg", g:"Ação", a:1986, c:""},
+    {t:"Expresso para o Inferno", u:"https://ok.ru/videoembed/2165225949856", capa:"img/expressoparaoinferno.jpg", g:"Ação", a:1985, c:""},
+    {t:"Multi - Crime e Poder", u:"https://ok.ru/videoembed/6874172099242", capa:"img/multicrimepoder.jpg", g:"Ação", a:2023, c:""},
+    {t:"A Fúria", u:"https://ok.ru/videoembed/7002149292600", capa:"img/afuria.jpg", g:"Ação", a:1978, c:""},
+    {t:"Robinson Crusoé", u:"https://ok.ru/videoembed/5402314541624", capa:"img/robinsoncrusoe.jpg", g:"Ação", a:1997, c:""},
+    {t:"Possuídos", u:"https://ok.ru/videoembed/3862193244757", capa:"img/possuidos.jpg", g:"Drama", a:1998, c:""},
+    {t:"Olhos Assassinos", u:"https://ok.ru/videoembed/6801317431864", capa:"img/olhosassassinos.jpg", g:"Drama", a:1981, c:""},
+    {t:"Águia de Aço 3 - Ases do Céu", u:"https://ok.ru/video/6973758835256", capa:"img/aguiadeaco3.jpg", g:"Ação", a:1992, c:""},
+    {t:"Titanic", u:"https://ok.ru/videoembed/7762794777258", capa:"img/titanic.jpg", g:"Drama", a:1997, c:""},
+    {t:"Titanic", u:"https://www.tokyvideo.com/br/video/titanic-1997-1080p-dublado", capa:"img/titanic.jpg", g:"Drama", a:1997, c:""},
+    {t:"A Múmia", u:"https://ok.ru/videoembed/776807516914", capa:"img/amumia.jpg", g:"Ação", a:1999, c:"A Múmia"},
+    {t:"O Retorno da Múmia", u:"https://ok.ru/videoembed/29160049266", capa:"img/oretornodamumia.jpg", g:"Ação", a:2001, c:"A Múmia"},
+    {t:"Missão Impossível: Nação Secreta", u:"https://ok.ru/videoembed/4935691864632", capa:"img/mi5.jpg", g:"Ação", a:2015, c:"Missão Impossível"},
+    {t:"Missão Impossível: Nação Secreta", u:"https://www.tokyvideo.com/br/video/missao-impossivel-nacao-secreta-2015-acao-aventura", capa:"img/mi5.jpg", g:"Ação", a:2015, c:"Missão Impossível"}, 
+    {t:"Missão Impossível: Efeito Fallout", u:"https://www.tokyvideo.com/br/video/missao-impossivel-6-efeito-fallout-2018", capa:"img/mi6.jpg", g:"Ação", a:2018, c:"Missão Impossível"},
+    {t:"A Bela e A Fera", u:"https://www.tokyvideo.com/br/video/a-bela-e-a-fera-4", capa:"img/belaeafera.jpg", g:"Ação", a:2014, c:""},
+    {t:"A Justiceira", u:"https://youtu.be/yBqDdRqYZyA?si=JsbEbEv1D3FwTI7b", capa:"img/ajusticeira18.jpg", g:"Ação", a:2018, c:""}, 
+    {t:"Vida de Inseto", u:"https://www.tokyvideo.com/br/video/vida-de-inseto-1998-720p-dub-dvdrip", capa:"img/vidadeinseto.jpg", g:"Animação", a:1998, c:""},
+    {t:"Dirty Dancing - Ritmo Quente", u:"https://www.tokyvideo.com/video/dirty-dancing-ritmo-quente-1987-danca-romance-1h-37m", capa:"img/dirtydancing.jpg", g:"Drama", a:1987, c:""},
+    {t:"Jimmy Bolha", u:"https://ok.ru/videoembed/1744922610251", capa:"img/jimmybolha.jpg", g:"Comédia", a:2001, c:""},
+    {t:"Jimmy Bolha", u:"https://www.tokyvideo.com/br/video/jimmy-bolha-bubble-boy-2001", capa:"img/jimmybolha.jpg", g:"Comédia", a:2001, c:""},
+    {t:"Apertem os Cintos... O Piloto Sumiu!", u:"https://www.tokyvideo.com/br/video/apertem-os-cintos-o-piloto-sumiu-1980-dublado", capa:"img/apertemoscintos.jpg", g:"Comédia", a:1980, c:""},
+    {t:"Anaconda", u:"https://www.tokyvideo.com/br/video/anaconda-1997-filme-completo-dublado", capa:"img/anaconda1997.jpg", g:"Comédia", a:1997, c:""},
+
+// redecanais
+    {t:"No Limite do Amanhã", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=NLMTDAMNH", capa:"img/nolimitedoamanha.jpg", g:"Ficção", a:2014, c:""},
+    {t:"Vida de Inseto", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=VDADISNTO", capa:"img/vidadeinseto.jpg", g:"Animação", a:1998, c:""},
+    {t:"Quanto mais Quente Melhor", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=QNTMSQNTEMLHR", capa:"img/quantomaisquentemelhor.jpg", g:"Comédia", a:1959, c:""},
+    {t:"O Jogo do Predador", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=OJGODPRDR", capa:"img/ojogodopredador.jpg", g:"Ação", a:2026, c:""},
+    {t:"Consequência", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=CNSQNCIA2026", capa:"img/consequencia.jpg", g:"Drama", a:2026, c:""},
+    {t:"Pânico 7", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=PNCO7", capa:"img/panico7.jpg", g:"Terror", a:2026, c:""},
+    {t:"Putz! A Coisa Tá Feia", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=PTZACSATFA", capa:"img/putzacoisatafeia.jpg", g:"Animação", a:2006, c:""},
+    {t:"As Cores da Violência", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=ASCRSDVLNCIA", capa:"img/ascoresdaviolencia.jpg", g:"Drama", a:1988, c:""},
+    {t:"Desligue!", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=DSGUE", capa:"img/desligue.jpg", g:"Suspense", a:2026, c:""},
+    {t:"Mike & Nick & Nick & Alice", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=MKEENCKENCKEALCE", capa:"img/mikenick.jpg", g:"Ação", a:2026, c:""},
+    {t:"O Morro dos Ventos Uivantes", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=OMORODSVNTSUVNTS", capa:"img/omorro.jpg", g:"Drama", a:2026, c:""},
+    {t:"Lágrimas do Sol", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=LGRMSDSOL", capa:"img/lagrimasdosol.jpg", g:"Ação", a:2003, c:""},
+    {t:"Uma Aventura Lego 2", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=UMAVNTRLGO2", capa:"img/lego2.jpg", g:"Animação", a:2019, c:"Lego"},
+    {t:"Uma Aventura Lego", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=UMAVNTRLGO", capa:"img/lego1.jpg", g:"Animação", a:2014, c:"Lego"},
+    {t:"Lego: As Aventuras de Clutch Powers", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=LGOASAVNTRSDCLTHPWRS", capa:"img/clutchpowers.jpg", g:"Animação", a:2010, c:"Lego"},
+    {t:"Lego Marvel: Vingadores Reunidos!", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=LGOSPRHRSDMRVLVNGDRSRNDS", capa:"img/legomarvel1.jpg", g:"Animação", a:2015, c:"Lego"},
+    {t:"Lego DC: Revolta em Gotham", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=LGOSPRHRSDCLGDJSTCRVLTAEMGTHM", capa:"img/legodc.jpg", g:"Animação", a:2016, c:"Lego"},
+    {t:"Lego Scooby-Doo! O Golpe da Praia", u:"https://redecanais.ph/player3/server.php?server=RCServer09&subfolder=ondemand&vid=SCBDFLM29", capa:"img/scoobydoo1.jpg", g:"Animação", a:2017, c:"Scooby-Doo"},
+    {t:"Lego Scooby-Doo! Hollywood Assombrada", u:"https://redecanais.ph/player3/server.php?server=RCServer09&subfolder=ondemand&vid=SCBDFLM26", capa:"img/scoobydoo2.jpg", g:"Animação", a:2016, c:"Scooby-Doo"},
+    {t:"Lego Ninjago: O Filme", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=LEGNJGOFLM", capa:"img/ninjago.jpg", g:"Animação", a:2017, c:"Lego"},
+    {t:"Lego Marvel Vingadores: Missão Demolição", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=LGOMRVLVNGDRSMSAODMLCAO", capa:"img/missaodemolicao.jpg", g:"Animação", a:2024, c:"Lego"},
+    {t:"Lego Marvel Vingadores: Código Vermelho", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=LGOMRVLVNGDRSCDGOVRMLHO", capa:"img/codigovermelho.jpg", g:"Animação", a:2023, c:"Lego"},
+    {t:"A Múmia", u:"https://redecanais.ph/player3/server.php?server=RCFServer1&subfolder=ondemand&vid=AMUMIA", capa:"img/amumia.jpg", g:"Ação", a:1999, c:"A Múmia"},
+    {t:"O Retorno da Múmia", u:"https://redecanais.ph/player3/server.php?server=RCFServer1&subfolder=ondemand&vid=ORTNDAMUMIA", capa:"img/oretornodamumia.jpg", g:"Ação", a:2001, c:"A Múmia"},
+    {t:"Apertem os Cintos... O Piloto Sumiu!", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=APARTMOSCNTSOPLTOSM", capa:"img/apertemoscintos.jpg", g:"Comédia", a:1980, c:""},
+    {t:"Coquetel Explosivo", u:"https://redecanais.ph/player3/server.php?server=RCFServer5&subfolder=ondemand&vid=CQTLEXPSVO", capa:"img/coquetelexplosivo.jpg", g:"Ação", a:2021, c:""},
+    {t:"Maria Callas", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=MRIACLS", capa:"img/mariacallas.jpg", g:"Drama", a:2024, c:""},
+    {t:"Zootopia 2", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=ZOTPIA2", capa:"img/zootopia2.jpg", g:"Animação", a:2025, c:""},
+    {t:"Máquina de Guerra", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=MQNDGRA2026", capa:"img/maquinadeguerra.jpg", g:"Ação", a:2026, c:""},
+    {t:"Marty Supreme", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=MRTYSPRME", capa:"img/martysupreme.jpg", g:"Comédia", a:2025, c:""},
+    {t:"Uma Festa de Arromba", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=UMFSTDARMBA1990", capa:"img/umafestaoarromba.jpg", g:"Comédia", a:1990, c:""},
+    {t:"Jimmy Bolha", u:"https://redecanais.ph/player3/server.php?server=RCFServer4&subfolder=ondemand&vid=JMYBLHA", capa:"img/jimmybolha.jpg", g:"Comédia", a:2001, c:""},
+    {t:"Stargate: A Chave para o Futuro", u:"https://redecanais.ph/player3/server.php?server=RCFServer5&subfolder=ondemand&vid=STRGTACPODH", capa:"img/stargate.jpg", g:"Ficção", a:1994, c:""},
+    {t:"Justiça Artificial", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=JSTCARTFCL", capa:"img/justicaartificial.jpg", g:"Suspense", a:2025, c:""},
+    {t:"Hamnet: A Vida antes de Hamlet", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=HMTAVDANTSDMLT", capa:"img/hamnet.jpg", g:"Drama", a:2025, c:""},
+    {t:"Família de Aluguel", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=FMLIADALGL", capa:"img/familiadealuguel.jpg", g:"Comédia", a:2025, c:""},
+    {t:"Missão Impossível: Efeito Fallout", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=MSAOIMPSVELEFTFLOUT", capa:"img/mi6.jpg", g:"Ação", a:2018, c:"Missão Impossível"},
+    {t:"Missão Impossível: Nação Secreta", u:"https://redecanais.ph/player3/server.php?server=RCFServer2&subfolder=ondemand&vid=MSAOIMPSVEL05", capa:"img/mi5.jpg", g:"Ação", a:2015, c:"Missão Impossível"},
+    {t:"Missão Impossível: Protocolo Fantasma", u:"https://redecanais.ph/player3/server.php?server=RCFServer1&subfolder=ondemand&vid=MSAOIMPSVEL04", capa:"img/mi4.jpg", g:"Ação", a:2011, c:"Missão Impossível"}
+];
+
+const catalogScreen = document.getElementById('catalog-screen');
+const playerScreen = document.getElementById('player-screen');
+const mainPlayer = document.getElementById('main-player');
+const grid = document.getElementById('lista-filmes');
+
+function renderizar(lista) {
+    grid.innerHTML = "";
+    if (lista.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 50px; color:#666;">Nenhum filme encontrado.</div>`;
+        return;
+    }
+
+    // Separa os filmes normais dos filmes da redecanais
+    const normais = lista.filter(f => !f.u.includes("redecanais"));
+    const redecanais = lista.filter(f => f.u.includes("redecanais"));
+
+    // Renderiza Filmes Normais
+    normais.forEach(f => criarCard(f));
+
+    // Adiciona Título Redecanais se houver filmes dela
+    if (redecanais.length > 0) {
+        const titleDiv = document.createElement('h2');
+        titleDiv.className = 'secao-titulo';
+        titleDiv.innerText = 'Redecanais';
+        grid.appendChild(titleDiv);
+        
+        redecanais.forEach(f => criarCard(f));
+    }
+}
+
+// Função auxiliar para criar o card e adicionar o atributo title (nome completo no mouse)
+function criarCard(filme) {
+    const card = document.createElement('div');
+    card.className = 'card-filme';
+    // O atributo title="full name" faz o nome aparecer ao passar o mouse
+    card.setAttribute('title', filme.t); 
+    
+    card.innerHTML = `
+        <img src="${filme.capa}" alt="${filme.t}" onerror="this.src='https://via.placeholder.com/300x450/111/fff?text=Sem+Capa'">
+        <div class="info">
+            <h3>${filme.t}</h3>
+            <p>${filme.a} | ${filme.g}</p>
+        </div>`;
+    card.onclick = () => abrirPlayer(filme.u);
+    grid.appendChild(card);
+}
+
+function filtrar() {
+    const termo = document.getElementById('search-input').value.toLowerCase();
+    const genero = document.getElementById('select-genero').value;
+    const colecao = document.getElementById('select-colecao').value;
+    const anoSel = document.getElementById('select-ano').value;
+
+    const filtrados = filmes.filter(f => {
+        const matchTitulo = f.t.toLowerCase().includes(termo);
+        const matchGenero = genero === "" || f.g === genero;
+        const matchColecao = colecao === "" || f.c === colecao;
+        
+        let matchAno = true;
+        if (anoSel === "Antigos") {
+            matchAno = f.a < 1980;
+        } else if (anoSel.includes("-")) {
+            const [inicio, fim] = anoSel.split("-").map(Number);
+            matchAno = f.a >= inicio && f.a <= fim;
+        } else if (anoSel !== "") {
+            matchAno = f.a == Number(anoSel);
+        }
+
+        return matchTitulo && matchGenero && matchColecao && matchAno;
+    });
+
+    renderizar(filtrados);
+}
+
+function abrirPlayer(url) {
+    // Lista de domínios que devem abrir em uma janela Pop-up
+    const abrirNoPopup = url.includes("redecanais") || 
+                         url.includes("youtube.com") || 
+                         url.includes("youtu.be") || 
+                         url.includes("tokyvideo.com");
+
+    if (abrirNoPopup) {
+        // Configurações da janela Pop-up
+        const w = 1000, h = 600;
+        const l = (screen.width - w) / 2;
+        const t = (screen.height - h) / 2;
+        
+        window.open(url, 'Player_Filme', `width=${w},height=${h},top=${t},left=${l},scrollbars=no,resizable=yes`);
+    } else {
+        // Comportamento padrão: abrir no iframe interno da página
+        catalogScreen.style.display = 'none';
+        playerScreen.style.display = 'block';
+        mainPlayer.src = url;
+    }
+}
+
+function fecharPlayer() {
+    mainPlayer.src = "";
+    playerScreen.style.display = 'none';
+    catalogScreen.style.display = 'block';
+}
+
+renderizar(filmes);
+</script>
+</body>
+</html>
