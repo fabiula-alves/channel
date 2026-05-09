@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo de Filmes Pro</title>
     <style>
-        body { background: #000; color: white; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; scroll-behavior: smooth; }
+        body { background: #000; color: white; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; overflow-x: hidden; }
         #catalog-screen { padding: 40px 20px; background: linear-gradient(to bottom, #1a0000 0%, #000 400px); min-height: 100vh; }
         
         .header-logo { text-align: center; margin-bottom: 30px; }
@@ -13,45 +13,62 @@
         .header-logo span { color: #e60000; }
 
         .filter-container {
-            max-width: 1200px; margin: 0 auto 40px auto; display: flex; flex-wrap: wrap;
-            gap: 12px; justify-content: center; background: rgba(255, 255, 255, 0.05);
-            padding: 20px; border-radius: 12px; border: 1px solid #333; align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
         }
-        .filter-container input, .filter-container select, .btn-nav {
-            background: #222; color: #fff; border: 1px solid #444; padding: 12px;
-            border-radius: 6px; outline: none; min-width: 140px; font-size: 0.9rem; cursor: pointer;
+        .filter-container input, .filter-container select {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 6px;
+            outline: none;
+            min-width: 160px;
+            font-size: 0.9rem;
         }
-        .btn-home { min-width: 50px !important; font-size: 1.2rem; }
+        .filter-container input:focus { border-color: #e60000; }
 
+        /* Estilo para os Títulos de Seção */
         .secao-titulo { 
-            grid-column: 1 / -1; color: #e60000; font-size: 1.5rem; 
-            margin: 40px 0 15px 0; border-left: 5px solid #e60000; padding-left: 15px;
-            text-transform: uppercase; letter-spacing: 1px;
+            grid-column: 1 / -1; 
+            color: #e60000; 
+            font-size: 1.8rem; 
+            margin: 30px 0 15px 0; 
+            border-bottom: 2px solid #e60000; 
+            display: inline-block;
+            padding-bottom: 5px;
         }
 
         .grid-filmes { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 25px; max-width: 1400px; margin: 0 auto; }
         .card-filme { background: #111; border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 2px solid #222; position: relative; }
-        .card-filme:hover { transform: scale(1.06); border-color: #e60000; z-index: 10; }
-        .card-filme img { width: 100%; height: 260px; object-fit: cover; }
+        .card-filme:hover { transform: scale(1.06); border-color: #e60000; z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .card-filme img { width: 100%; height: 260px; object-fit: cover; display: block; background: #222; }
         .card-filme .info { padding: 12px; text-align: center; }
-        .card-filme h3 { font-size: 0.85rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-filme h3 { font-size: 0.85rem; margin: 0 0 5px 0; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-filme p { font-size: 0.75rem; color: #888; margin: 0; }
 
-        .scroll-btn {
-            position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-            background: #e60000; color: white; border: none;
-            width: 50px; height: 50px; border-radius: 50%;
-            cursor: pointer; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            display: flex; align-items: center; justify-content: center;
-        }
+        #player-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; }
+        .video-container { width: 100%; height: 100%; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        #top-navigation { position: absolute; top: 0; left: 0; width: 100%; height: 100px; z-index: 2100; display: flex; align-items: center; padding: 0 30px; pointer-events: none; }
+        .btn-voltar { background: rgba(230,0,0,0.9); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; pointer-events: auto; opacity: 0; transition: 0.4s; }
+        #player-screen:hover .btn-voltar { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div id="catalog-screen">
     <div class="header-logo"><h1>Lista de <span>Filmes</span></h1></div>
+
     <div class="filter-container">
-        <button class="btn-nav btn-home" onclick="window.location.href='index.html'">🏠</button>
-        <button class="btn-nav" id="btn-toggle-modo" onclick="alternarModo()">🎬 Todos Filmes</button>
         <input type="text" id="search-input" placeholder="Buscar por nome..." oninput="filtrar()">
         
         <select id="select-genero" onchange="filtrar()">
@@ -89,10 +106,14 @@
             <option value="Antigos">Mais antigos</option>
         </select>
     </div>
+
     <div class="grid-filmes" id="lista-filmes"></div>
 </div>
 
-<button class="scroll-btn" onclick="navegarPagina()" id="scrollBtn">▼</button>
+<div id="player-screen">
+    <div id="top-navigation"><button class="btn-voltar" onclick="fecharPlayer()">⬅ VOLTAR AO CATÁLOGO</button></div>
+    <div class="video-container"><iframe id="main-player" src="" allowfullscreen></iframe></div>
+</div>
 
 <script>
 const filmes = [
@@ -141,7 +162,7 @@ const filmes = [
     {t:"Apertem os Cintos... O Piloto Sumiu!", u:"https://www.tokyvideo.com/br/video/apertem-os-cintos-o-piloto-sumiu-1980-dublado", capa:"img/apertemoscintos.jpg", g:"Comédia", a:1980, c:""},
     {t:"Anaconda", u:"https://www.tokyvideo.com/br/video/anaconda-1997-filme-completo-dublado", capa:"img/anaconda1997.jpg", g:"Comédia", a:1997, c:""},
 // Youtube
-    {t:"A Justiceira", u:"https://www.youtube.com/watch?v=yBqDdRqYZyA", capa:"img/ajusticeira18.jpg", g:"Ação", a:2018, c:""},
+    {t:"A Justiceira", u:"https://youtu.be/yBqDdRqYZyA?si=JsbEbEv1D3FwTI7b", capa:"img/ajusticeira18.jpg", g:"Ação", a:2018, c:""},
 // redecanais
     {t:"No Limite do Amanhã", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=NLMTDAMNH", capa:"img/nolimitedoamanha.jpg", g:"Ficção", a:2014, c:""},
     {t:"Vida de Inseto", u:"https://redecanais.ph/player3/server.php?server=RCFServer3&subfolder=ondemand&vid=VDADISNTO", capa:"img/vidadeinseto.jpg", g:"Animação", a:1998, c:""},
@@ -184,48 +205,51 @@ const filmes = [
     {t:"Missão Impossível: Protocolo Fantasma", u:"https://redecanais.ph/player3/server.php?server=RCFServer1&subfolder=ondemand&vid=MSAOIMPSVEL04", capa:"img/mi4.jpg", g:"Ação", a:2011, c:"Missão Impossível"}
 ];
 
-let modoRedecanais = true;
+const catalogScreen = document.getElementById('catalog-screen');
+const playerScreen = document.getElementById('player-screen');
+const mainPlayer = document.getElementById('main-player');
 const grid = document.getElementById('lista-filmes');
 
 function renderizar(lista) {
     grid.innerHTML = "";
-    
-    // Filtro de Origem (Botão alternar)
-    const filtradosPorOrigem = modoRedecanais 
-        ? lista.filter(f => f.u.includes("redecanais")) 
-        : lista.filter(f => !f.u.includes("redecanais"));
+    if (lista.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 50px; color:#666;">Nenhum filme encontrado.</div>`;
+        return;
+    }
 
-    const categorias = {
-        "Redecanais": filtradosPorOrigem.filter(f => f.u.includes("redecanais")),
-        "Dailymotion": filtradosPorOrigem.filter(f => f.u.includes("dailymotion")),
-        "TokyVideo": filtradosPorOrigem.filter(f => f.u.includes("tokyvideo")),
-        "OK.ru": filtradosPorOrigem.filter(f => f.u.includes("ok.ru")),
-        "YouTube": filtradosPorOrigem.filter(f => f.u.includes("youtu"))
-    };
+    // Separa os filmes normais dos filmes da redecanais
+    const normais = lista.filter(f => !f.u.includes("redecanais"));
+    const redecanais = lista.filter(f => f.u.includes("redecanais"));
 
-    Object.keys(categorias).forEach(cat => {
-        if (categorias[cat].length > 0) {
-            const h2 = document.createElement('h2');
-            h2.className = 'secao-titulo';
-            h2.innerText = cat;
-            grid.appendChild(h2);
-            categorias[cat].forEach(f => criarCard(f));
-        }
-    });
+    // Renderiza Filmes Normais
+    normais.forEach(f => criarCard(f));
+
+    // Adiciona Título Redecanais se houver filmes dela
+    if (redecanais.length > 0) {
+        const titleDiv = document.createElement('h2');
+        titleDiv.className = 'secao-titulo';
+        titleDiv.innerText = 'Redecanais';
+        grid.appendChild(titleDiv);
+        
+        redecanais.forEach(f => criarCard(f));
+    }
 }
 
+// Função auxiliar para criar o card e adicionar o atributo title (nome completo no mouse)
 function criarCard(filme) {
     const card = document.createElement('div');
     card.className = 'card-filme';
-    card.innerHTML = `<img src="${filme.capa}" loading="lazy"><div class="info"><h3>${filme.t}</h3><p>${filme.a}</p></div>`;
+    // O atributo title="full name" faz o nome aparecer ao passar o mouse
+    card.setAttribute('title', filme.t); 
+    
+    card.innerHTML = `
+        <img src="${filme.capa}" alt="${filme.t}" onerror="this.src='https://via.placeholder.com/300x450/111/fff?text=Sem+Capa'">
+        <div class="info">
+            <h3>${filme.t}</h3>
+            <p>${filme.a} | ${filme.g}</p>
+        </div>`;
     card.onclick = () => abrirPlayer(filme.u);
     grid.appendChild(card);
-}
-
-function alternarModo() {
-    modoRedecanais = !modoRedecanais;
-    document.getElementById('btn-toggle-modo').innerText = modoRedecanais ? "🎬 Todos Filmes" : "🎬 Só Redecanais";
-    filtrar();
 }
 
 function filtrar() {
@@ -240,45 +264,48 @@ function filtrar() {
         const matchColecao = colecao === "" || f.c === colecao;
         
         let matchAno = true;
-        if (anoSel !== "") {
-            if (anoSel.includes("-")) {
-                const [inicio, fim] = anoSel.split("-").map(Number);
-                matchAno = f.a >= inicio && f.a <= fim;
-            } else if (anoSel === "Antigos") {
-                matchAno = f.a < 1980;
-            } else {
-                matchAno = f.a === Number(anoSel);
-            }
+        if (anoSel === "Antigos") {
+            matchAno = f.a < 1980;
+        } else if (anoSel.includes("-")) {
+            const [inicio, fim] = anoSel.split("-").map(Number);
+            matchAno = f.a >= inicio && f.a <= fim;
+        } else if (anoSel !== "") {
+            matchAno = f.a == Number(anoSel);
         }
 
         return matchTitulo && matchGenero && matchColecao && matchAno;
     });
+
     renderizar(filtrados);
 }
 
 function abrirPlayer(url) {
-    const w = 1100, h = 650;
-    const l = (screen.width - w) / 2;
-    const t = (screen.height - h) / 2;
-    window.open(url, 'Player_Filme', `width=${w},height=${h},top=${t},left=${l},scrollbars=no`);
-}
+    // Lista de domínios que devem abrir em uma janela Pop-up
+    const abrirNoPopup = url.includes("redecanais") || 
+                         url.includes("youtube.com") || 
+                         url.includes("youtu.be") || 
+                         url.includes("tokyvideo.com");
 
-function navegarPagina() {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
-        window.scrollTo(0, 0);
+    if (abrirNoPopup) {
+        // Configurações da janela Pop-up
+        const w = 1000, h = 600;
+        const l = (screen.width - w) / 2;
+        const t = (screen.height - h) / 2;
+        
+        window.open(url, 'Player_Filme', `width=${w},height=${h},top=${t},left=${l},scrollbars=no,resizable=yes`);
     } else {
-        window.scrollBy(0, window.innerHeight * 0.8);
+        // Comportamento padrão: abrir no iframe interno da página
+        catalogScreen.style.display = 'none';
+        playerScreen.style.display = 'block';
+        mainPlayer.src = url;
     }
 }
 
-window.onscroll = function() {
-    const btn = document.getElementById('scrollBtn');
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
-        btn.innerText = "▲";
-    } else {
-        btn.innerText = "▼";
-    }
-};
+function fecharPlayer() {
+    mainPlayer.src = "";
+    playerScreen.style.display = 'none';
+    catalogScreen.style.display = 'block';
+}
 
 renderizar(filmes);
 </script>
